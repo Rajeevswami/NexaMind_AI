@@ -14,7 +14,7 @@ ALLOWED_HOSTS = [host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS",
 INSTALLED_APPS = [
     "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes",
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
-    "accounts", "dashboard", "documents", "chat",
+    "rest_framework", "accounts", "dashboard", "documents", "chat",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware", "django.contrib.sessions.middleware.SessionMiddleware",
@@ -54,4 +54,6 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard:home"
 LOGOUT_REDIRECT_URL = "login"
 MAX_UPLOAD_SIZE = int(os.environ.get("MAX_UPLOAD_SIZE", 10 * 1024 * 1024))
-
+AI_SERVICE_URL = os.environ.get("AI_SERVICE_URL", "http://127.0.0.1:8001")
+INTERNAL_API_KEY = os.environ.get("INTERNAL_API_KEY", "")
+AI_SERVICE_TIMEOUT = int(os.environ.get("AI_SERVICE_TIMEOUT", "45"))
