@@ -1,6 +1,8 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from app.core.security import verify_internal_key
+from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.llm.client import get_completion
 from app.llm.prompts import build_chat_system_prompt
 from app.rag.pipeline import build_context
@@ -10,7 +12,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ai", tags=["chat"], dependencies=[Depends(verify_internal_key)])
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(payload: ChatRequest) -> ChatResponse:
+@limiter.limit(f"{settings.rate_limit_per_minute}/minute")
+async def chat(request: Request, payload: ChatRequest) -> ChatResponse:
     context, sources = build_context(payload.question, payload.user_id, payload.document_id)
     messages = [{"role": message.role, "content": message.content} for message in payload.history[-15:]]
     messages.append({"role": "user", "content": payload.question})

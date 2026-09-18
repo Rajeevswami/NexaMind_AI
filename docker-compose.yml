@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16
+    environment: { POSTGRES_DB: nexamind, POSTGRES_USER: nexamind, POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} }
+    volumes: [postgres_data:/var/lib/postgresql/data]
+  redis: { image: redis:7-alpine }
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes: [qdrant_data:/qdrant/storage]
+  ai_service:
+    build: ./ai_service
+    env_file: .env
+    environment: { QDRANT_URL: http://qdrant:6333, REDIS_URL: redis://redis:6379/0 }
+    depends_on: [qdrant, redis]
+    volumes: [media_data:/app/media]
+  django:
+    build: .
+    env_file: .env
+    environment: { DATABASE_URL: postgresql://nexamind:${POSTGRES_PASSWORD}@postgres:5432/nexamind, REDIS_URL: redis://redis:6379/0, AI_SERVICE_URL: http://ai_service:8001 }
+    depends_on: [postgres, redis, ai_service]
+    volumes: [media_data:/app/media]
+  nginx:
+    image: nginx:alpine
+    ports: ["80:80"]
+    volumes: [./nginx/nginx.conf:/etc/nginx/nginx.conf:ro, media_data:/app/media:ro]
+    depends_on: [django]
+volumes: { postgres_data: {}, qdrant_data: {}, media_data: {} }
