@@ -1,46 +1,6 @@
-{% extends 'base.html' %}
-{% load static %}
-{% block title %}Chat · NexaMind AI{% endblock %}
-{% block content %}
-<link rel="stylesheet" href="{% static 'css/chat.css' %}">
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<div class="chat-shell" x-data="chatLayout()" :class="{ 'dark': darkMode }">
-  <div class="chat-mobile-bar">
-    <button class="icon-button" @click="sidebarOpen = true" aria-label="Open conversations">☰</button>
-    <span class="chat-wordmark">NexaMind AI</span>
-    <button class="icon-button" @click="toggleTheme" :aria-label="darkMode ? 'Use light theme' : 'Use dark theme'" x-text="darkMode ? '☀' : '◐'"></button>
-  </div>
-
-  <div class="sidebar-backdrop" x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false"></div>
-  <aside class="chat-sidebar" :class="{ 'is-open': sidebarOpen }">
-    <div class="sidebar-top">
-      <a href="{% url 'dashboard:home' %}" class="chat-brand"><span class="brand-mark">N</span><span>NexaMind AI</span></a>
-      <button class="icon-button sidebar-close" @click="sidebarOpen = false" aria-label="Close conversations">×</button>
-    </div>
-    <button class="new-chat-button" type="button"><span>＋</span> New chat</button>
-    <div class="history-label">Recent conversations</div>
-    <nav class="chat-history" aria-label="Chat history">
-      <button class="history-item is-active"><span class="history-icon">◻</span><span class="history-title">Learning data structures</span><span class="history-more">···</span></button>
-      <button class="history-item"><span class="history-icon">◻</span><span class="history-title">Resume improvement ideas</span></button>
-      <button class="history-item"><span class="history-icon">◻</span><span class="history-title">Notes from product strategy</span></button>
-    </nav>
-    <div class="sidebar-bottom">
-      <a href="{% url 'documents:index' %}" class="sidebar-link">▱ &nbsp; My documents</a>
-      <button class="sidebar-link theme-button" type="button" @click="toggleTheme"><span x-text="darkMode ? '☀' : '◐'"></span><span x-text="darkMode ? 'Light mode' : 'Dark mode'"></span></button>
-      <div class="profile-row"><span class="avatar">{{ user.username|slice:':1'|upper }}</span><span class="profile-name">{{ user.username }}</span><span class="profile-menu">···</span></div>
-    </div>
-  </aside>
-
-  <section class="chat-main">
-    <header class="chat-header"><div><h1>Learning data structures</h1><p>Document-aware assistant</p></div><button class="header-new-chat" type="button">＋ New chat</button></header>
-    <div class="message-scroll" id="message-scroll">
-      <div class="conversation">
-        <div class="message message-user"><div class="message-bubble">Can you explain the difference between a stack and a queue?</div></div>
-        <div class="message message-ai"><div class="assistant-avatar">N</div><div class="message-content"><div class="message-bubble"><p>A <strong>stack</strong> and a <strong>queue</strong> are both linear data structures, but they remove items in different orders:</p><ul><li><strong>Stack:</strong> Last In, First Out (LIFO). Think of a stack of plates.</li><li><strong>Queue:</strong> First In, First Out (FIFO). Think of a line at a ticket counter.</li></ul><p>Use stacks for undo actions or function calls; use queues for task scheduling and request processing.</p></div><div class="message-actions"><button type="button" aria-label="Copy answer">□ Copy</button><button type="button" aria-label="Good answer">⌃</button><button type="button" aria-label="Bad answer">⌄</button></div></div></div>
-      </div>
-    </div>
-    <div class="composer-wrap"><form class="composer" @submit.prevent><textarea rows="1" placeholder="Message NexaMind…" aria-label="Message NexaMind" @input="$el.style.height = 'auto'; $el.style.height = Math.min($el.scrollHeight, 180) + 'px'"></textarea><button type="submit" class="send-button" aria-label="Send message">↑</button></form><p class="composer-note">NexaMind can make mistakes. Check important information.</p></div>
-  </section>
-</div>
-<script src="{% static 'js/chat.js' %}"></script>
-{% endblock %}
+{% extends 'base.html' %}{% load static %}{% block title %}Chat · NexaMind AI{% endblock %}{% block content %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}"><script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<div class="chat-shell" x-data="chatApp({ initialSessionId: {{ active_session.id|default:'null' }} })" x-init="init()" :class="{'dark':darkMode}">
+<div class="chat-mobile-bar"><button class="icon-button" @click="sidebarOpen=true">☰</button><span class="chat-wordmark">NexaMind AI</span></div><div class="sidebar-backdrop" x-show="sidebarOpen" @click="sidebarOpen=false"></div>
+<aside class="chat-sidebar" :class="{'is-open':sidebarOpen}"><div class="sidebar-top"><a href="{% url 'dashboard:home' %}" class="chat-brand"><span class="brand-mark">N</span>NexaMind AI</a><button class="icon-button sidebar-close" @click="sidebarOpen=false">×</button></div><button class="new-chat-button" @click="newChat">＋ New chat</button><div class="history-label">Recent conversations</div><nav class="chat-history"><template x-for="session in sessions" :key="session.id"><button class="history-item" :class="{'is-active':session.id===activeSessionId}" @click="loadSession(session.id)"><span class="history-title" x-text="session.title"></span></button></template></nav><div class="sidebar-bottom"><a href="{% url 'documents:index' %}" class="sidebar-link">▱ My documents</a><button class="sidebar-link" @click="toggleTheme" x-text="darkMode?'☀ Light mode':'◐ Dark mode'"></button></div></aside>
+<section class="chat-main"><header class="chat-header"><div><h1 x-text="activeTitle"></h1><p>Document-aware assistant</p></div><button class="header-new-chat" @click="newChat">＋ New chat</button></header><div class="message-scroll" id="message-scroll"><div class="conversation"><div class="empty-chat" x-show="messages.length===0"><div class="empty-icon">N</div><h2>How can I help today?</h2><p>Ask about learning, careers, or your uploaded documents.</p></div><template x-for="message in messages" :key="message.id || message.clientId"><div class="message" :class="message.role==='user'?'message-user':'message-ai'"><template x-if="message.role==='assistant'"><div class="assistant-avatar">N</div></template><div class="message-content"><div class="message-bubble" x-text="message.content"></div><div class="message-actions" x-show="message.role==='assistant'"><button @click="copy(message.content)">□ Copy</button></div></div></div></template><div class="typing" x-show="sending"><span></span><span></span><span></span></div><div class="chat-error" x-show="error"><span x-text="error"></span><button @click="retry">Retry</button></div></div></div><div class="composer-wrap"><form class="composer" @submit.prevent="send"><textarea x-model="draft" :disabled="sending" rows="1" placeholder="Message NexaMind…" @keydown.enter.prevent="!$event.shiftKey && send()"></textarea><button type="submit" class="send-button" :disabled="sending || !draft.trim()">↑</button></form><p class="composer-note">NexaMind can make mistakes. Check important information.</p></div></section></div><script src="{% static 'js/chat.js' %}"></script>{% endblock %}

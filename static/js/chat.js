@@ -1,10 +1,1 @@
-function chatLayout() {
-  return {
-    sidebarOpen: false,
-    darkMode: localStorage.getItem('nexamind-theme') === 'dark',
-    toggleTheme() {
-      this.darkMode = !this.darkMode;
-      localStorage.setItem('nexamind-theme', this.darkMode ? 'dark' : 'light');
-    },
-  };
-}
+function chatApp(o){return{sidebarOpen:false,darkMode:localStorage.getItem('nexamind-theme')==='dark',sessions:[],activeSessionId:o.initialSessionId,activeTitle:'New conversation',messages:[],draft:'',sending:false,error:'',failedDraft:'',async init(){await this.refreshSessions();if(this.activeSessionId)await this.loadSession(this.activeSessionId)},toggleTheme(){this.darkMode=!this.darkMode;localStorage.setItem('nexamind-theme',this.darkMode?'dark':'light')},csrf(){const x=document.cookie.split('; ').find(v=>v.indexOf('csrftoken=')===0);return x?x.split('=')[1]:''},async refreshSessions(){const r=await fetch('/chat/api/sessions/');this.sessions=(await r.json()).sessions},async newChat(){const r=await fetch('/chat/api/sessions/new/',{method:'POST',headers:{'X-CSRFToken':this.csrf()}}),s=await r.json();this.activeSessionId=s.id;this.activeTitle=s.title;this.messages=[];await this.refreshSessions()},async loadSession(id){const r=await fetch('/chat/api/sessions/'+id+'/');if(!r.ok)return;const s=await r.json();this.activeSessionId=s.id;this.activeTitle=s.title;this.messages=s.messages;this.sidebarOpen=false},async send(){const t=this.draft.trim();if(!t||this.sending)return;if(!this.activeSessionId)await this.newChat();this.draft='';this.failedDraft=t;this.error='';this.sending=true;this.messages.push({clientId:crypto.randomUUID(),role:'user',content:t});try{const r=await fetch('/chat/api/sessions/'+this.activeSessionId+'/messages/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':this.csrf()},body:JSON.stringify({message:t})}),p=await r.json();if(!r.ok)throw Error(p.error||'Message could not be sent.');this.messages.push({clientId:crypto.randomUUID(),role:'assistant',content:p.answer});this.activeTitle=p.title;await this.refreshSessions()}catch(e){this.messages.pop();this.error=e.message}finally{this.sending=false}},retry(){this.draft=this.failedDraft;this.error='';this.send()},copy(t){navigator.clipboard.writeText(t)}}}

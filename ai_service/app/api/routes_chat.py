@@ -14,7 +14,11 @@ router = APIRouter(prefix="/ai", tags=["chat"], dependencies=[Depends(verify_int
 @router.post("/chat", response_model=ChatResponse)
 @limiter.limit(f"{settings.rate_limit_per_minute}/minute")
 async def chat(request: Request, payload: ChatRequest) -> ChatResponse:
-    context, sources = build_context(payload.question, payload.user_id, payload.document_id)
+    try:
+        context, sources = build_context(payload.question, payload.user_id, payload.document_id)
+    except Exception:
+        logger.exception("RAG retrieval unavailable; continuing without document context")
+        context, sources = "", []
     messages = [{"role": message.role, "content": message.content} for message in payload.history[-15:]]
     messages.append({"role": "user", "content": payload.question})
     try:
