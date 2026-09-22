@@ -35,7 +35,7 @@ The two services communicate over an internal, API-key-authenticated channel —
 ## 🏗️ Architecture
 
 <p align="center">
-  <img src="docs/images/architecture.svg" alt="NexaMind AI system architecture diagram" width="100%">
+  <img src="architecture.png" alt="NexaMind AI system architecture diagram" width="100%">
 </p>
 
 ```text
@@ -53,10 +53,47 @@ Browser → Django (auth, templates, uploads) → FastAPI (Claude, RAG, agents)
 ### RAG Retrieval Pipeline
 
 <p align="center">
-  <img src="docs/images/rag-pipeline.svg" alt="Document retrieval-augmented generation pipeline diagram" width="100%">
+  <img src="rag-pipeline.png" alt="Document retrieval-augmented generation pipeline diagram" width="100%">
 </p>
 
 Uploaded documents flow through extraction → chunking → embedding → vector storage, so that chat and the AI agents can retrieve only the most relevant, user-owned context before calling Claude.
+
+---
+
+## 🖥️ Screenshots
+
+> UI previews below are generated mockups matching the app's actual templates and Tailwind theme (dark slate + cyan accents) — replace with real screenshots any time by swapping these files.
+
+<table>
+<tr>
+<td width="50%">
+
+**Dashboard**
+<img src="dashboard.png" alt="NexaMind AI dashboard page showing document count and recent uploads" width="100%">
+
+</td>
+<td width="50%">
+
+**Chat**
+<img src="chat.png" alt="NexaMind AI chat interface with sidebar history and message thread" width="100%">
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Documents**
+<img src="documents.png" alt="NexaMind AI documents page with upload dropzone and file list" width="100%">
+
+</td>
+<td width="50%">
+
+**Login**
+<img src="login.png" alt="NexaMind AI login page" width="100%">
+
+</td>
+</tr>
+</table>
 
 ---
 
